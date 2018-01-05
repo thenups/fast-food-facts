@@ -27,3 +27,9 @@ Study that correlation between geographic location and how it affects health & w
 - CDC Data
 - Hospital Data
 - Web MD (research)
+
+### Task Breakdown by Saturday Jan 9
+- Mona --> Google places API, breaking down areas by fastfood and county names
+- Monica --> Hospital data resources, types of disease per county
+- Jeff --> CDC data to see if (z states by age groups and state, see if it's available by county)
+- Nupur --> Census data see income and education breakdown by county
