@@ -1,11 +1,15 @@
-#Teamname: Lighthearted Dumps
+# Team name: Lighthearted Dumps
+- Mona Derakhshan
+- Monica Martin
+- Jeff Moore
+- Nupur Mathur
 
-#Project Name: Fast Food Facts
+## Project Name: Fast Food Facts
 
-##Focus
+### Focus
 Study that correlation between geographic location and how it affects health & wellness.
 
-##Questions
+### Questions
 - Does volume of fast food restaurants affect health and wellness in a county?
 - Do low income areas have more fast food restaurants?
 - Are people with lower education levels more likely to have a lower income? Does that affect their health?
@@ -17,9 +21,9 @@ Study that correlation between geographic location and how it affects health & w
   - Income brackets
   - Education level
 
-##Data Sources
+### Data Sources
 - US Census Data
 - Google Places
-- Yelp
 - CDC Data
-- Web MD
+- Hospital Data
+- Web MD (research)
