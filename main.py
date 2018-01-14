@@ -37,11 +37,9 @@ geocodeMapCounty = makeGeocodeDF(geocodeMap,50,'County Code (FIPS)','County','St
 # Create merged DataFrame with County and State FIPS and Names
 geocodeMap = pd.merge(geocodeMapState,geocodeMapCounty, how='outer', on='State Code (FIPS)')
 
-#///
-#/// USE variable below for state/county mapping:
-#/// geocodeMap
-#///
-
+#/ Variables/DFs to use:
+    #/ For state/county mapping: geocodeMap
+    #/ remember to merge on BOTH State and County (county FIPs repeat)
 
 ##### CENSUS DATA #####
 #/// SETUP 'GET' Variables \\\#
@@ -218,7 +216,7 @@ incomeDFmapped = mapToGeocode(incomeDF)
 eduDFmapped = mapToGeocode(eduDF)
 popDFmapped = mapToGeocode(populationDF)
 
-#/ Notes on my code ^:
+#/ Variables/DFs to use:
     #/ To normalize data, use this DF: popDFmapped
     #/ Income data DF to use: incomeDFmapped
     #/ Education data DF to use: eduDFmapped
