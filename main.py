@@ -6,7 +6,8 @@ import pandas as pd
 from pandas import ExcelWriter
 from pandas import ExcelFile
 
-##### Create function to make Geocode Data into DataFrame #####
+##### MAP GEOCODES (FIPS) TO STATES/COUNTIES #####
+# Create function to make Geocode Data into DataFrame
 def makeGeocodeDF(pdExel,sumLevel,fipsCol1,colName,fipsCol2=0):
     # Create DF out of excel
     df = pdExel.loc[pdExel['Summary Level'] == sumLevel]
@@ -36,12 +37,14 @@ geocodeMapCounty = makeGeocodeDF(geocodeMap,50,'County Code (FIPS)','County','St
 # Create merged DataFrame with County and State FIPS and Names
 geocodeMap = pd.merge(geocodeMapState,geocodeMapCounty, how='outer', on='State Code (FIPS)')
 
-#####
-##### USE geocodeMap to map FIPS to counties/states #####
-#####
+#///
+#/// USE variable below for state/county mapping:
+#/// geocodeMap
+#///
 
-##### SETUP 'GET' Variables #####
 
+##### CENSUS DATA #####
+#/// SETUP 'GET' Variables \\\#
 # Function to dynamically create variable ID lists
 def createIdList(r1,r2,s,avoid=[]): #range start, range stop, id string, avoid ids (optional)
 
@@ -85,7 +88,6 @@ def createIdDict(k,v):
     # Return Dictionary
     return d
 
-
 # HOUSEHOLD INCOME: Create List and Dictionary
 householdIncomeIdList = createIdList(1,18,'B19001_0')
 householdIncomeBuckets = ['Total',
@@ -122,6 +124,9 @@ educationDict = createIdDict(educationIdList,educationAttainmentBuckets)
 educationIdList1 = educationIdList[:int(len(educationIdList)/2)]
 educationIdList2 = educationIdList[int(len(educationIdList)/2):]
 
+# POPULATION: Create Dictionary
+populationDict = createIdDict(['B00001_001E'],['Population'])
+
 # Create string of ID's to query
 idLists = [householdIncomeIdList,educationIdList1,educationIdList2] # List of lists
 getArgs = []
@@ -139,7 +144,11 @@ for l in idLists:
     getIds = getIds[:-1] #remove last comma
     getArgs.append(getIds) #add to ID list
 
-##### Setup Query URL #####
+# Append population to get args
+getArgs.append((list(populationDict.keys()))[0])
+
+#/// Setup Query URL \\\#
+# Variables
 year = 2016
 apiKey = 'a9bba28cbc522f8f9d8ae3b88ef030fba6034516'
 baseURL = 'https://api.census.gov/data/{}/acs/acs1/'.format(year)
@@ -152,6 +161,9 @@ for x in getArgs:
     queryURL = baseURL + URLArgs
     urlList.append(queryURL)
 
+
+#/// Create Dataframes \\\#
+# Create function
 def makeDataFrame(url,labelDict):
 
     #Get response data from API
@@ -167,16 +179,19 @@ def makeDataFrame(url,labelDict):
     df['State Code (FIPS)'] = df['State Code (FIPS)'].str.lstrip('0')
     df['County Code (FIPS)'] = df['County Code (FIPS)'].str.lstrip('0')
 
+    # Make all numbers in DF numeric
     df = df.apply(pd.to_numeric)
 
     return df
 
-# Create DataFrames
+# Make DF using Function
 incomeDF = makeDataFrame(urlList[0],householdIncomeDict)
 eduDF1 = makeDataFrame(urlList[1],educationDict)
 eduDF2 = makeDataFrame(urlList[2],educationDict)
+populationDF = makeDataFrame(urlList[3],populationDict)
 
-# Merge Education DataFrames
+#/// Merge Education DataFrames \\\#
+# Create joint DF
 eduDF = pd.merge(eduDF1,eduDF2,how='outer',on=['State Code (FIPS)','County Code (FIPS)'])
 
 # Create dictionary to remove appeneded X's and Y's on column names
@@ -193,6 +208,17 @@ eduDF = eduDF.rename(columns=removeAppend)
 # Sum columns with same names in DF
 eduDF = eduDF.groupby(lambda x:x, axis=1).sum()
 
+#/// Map Geocodes and add to DF \\\#
+# Create function to automate
+def mapToGeocode(df):
+    return pd.merge(df,geocodeMap,how='inner',on=['State Code (FIPS)','County Code (FIPS)'])
+
 # Map census DFs to FIPS
-incomeDFmapped = pd.merge(incomeDF,geocodeMap,how='inner',on=['State Code (FIPS)','County Code (FIPS)'])
-eduDFmapped = pd.merge(eduDF,geocodeMap,how='inner',on=['State Code (FIPS)','County Code (FIPS)'])
+incomeDFmapped = mapToGeocode(incomeDF)
+eduDFmapped = mapToGeocode(eduDF)
+popDFmapped = mapToGeocode(populationDF)
+
+#/ Notes on my code ^:
+    #/ To normalize data, use this DF: popDFmapped
+    #/ Income data DF to use: incomeDFmapped
+    #/ Education data DF to use: eduDFmapped
