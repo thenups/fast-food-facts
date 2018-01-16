@@ -5,6 +5,8 @@ import json
 import pandas as pd
 from pandas import ExcelWriter
 from pandas import ExcelFile
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 ##### MAP GEOCODES (FIPS) TO STATES/COUNTIES #####
 # Create function to make Geocode Data into DataFrame
@@ -87,9 +89,8 @@ def createIdDict(k,v):
     return d
 
 # HOUSEHOLD INCOME: Create List and Dictionary
-householdIncomeIdList = createIdList(1,18,'B19001_0')
-householdIncomeBuckets = ['Total',
-                          '< $10k',
+householdIncomeIdList = createIdList(2,18,'B19001_0')
+householdIncomeBuckets = ['< $10k',
                           '$10K - $14,999',
                           '$15K - $19,999',
                           '$20K - $24,999',
@@ -123,7 +124,7 @@ educationIdList1 = educationIdList[:int(len(educationIdList)/2)]
 educationIdList2 = educationIdList[int(len(educationIdList)/2):]
 
 # POPULATION: Create Dictionary
-populationDict = createIdDict(['B00001_001E'],['Population'])
+populationDict = createIdDict(['B01001_001E'],['Population'])
 
 # Create string of ID's to query
 idLists = [householdIncomeIdList,educationIdList1,educationIdList2] # List of lists
@@ -208,15 +209,19 @@ eduDF = eduDF.groupby(lambda x:x, axis=1).sum()
 
 #/// Map Geocodes and add to DF \\\#
 # Create function to automate
-def mapToGeocode(df):
-    return pd.merge(df,geocodeMap,how='inner',on=['State Code (FIPS)','County Code (FIPS)'])
+def mergeOnGeocode(df1,df2):
+    try:
+        return pd.merge(df1,df2,how='inner',on=['State Code (FIPS)','County Code (FIPS)'])
+    except:
+        return pd.merge(df1,df2,how='inner',on=['State Code (FIPS)'])
+
 
 # Map census DFs to FIPS
-incomeDFmapped = mapToGeocode(incomeDF)
-eduDFmapped = mapToGeocode(eduDF)
-popDFmapped = mapToGeocode(populationDF)
+incomeDFmapped = mergeOnGeocode(incomeDF,geocodeMap)
+eduDFmapped = mergeOnGeocode(eduDF,geocodeMap)
+popDFmapped = mergeOnGeocode(populationDF,geocodeMap)
 
 #/ Variables/DFs to use:
-    #/ To normalize data, use this DF: popDFmapped
-    #/ Income data DF to use: incomeDFmapped
-    #/ Education data DF to use: eduDFmapped
+    #/ To normalize data, use this DF: popDFmapped (FIPS mapped to names) or populationDF (FIPS only)
+    #/ Income data DF to use: incomeDFmapped (FIPS mapped to names) or incomeDF (FIPS only)
+    #/ Education data DF to use: eduDFmapped (FIPS mapped to names) or eduDF (FIPS only)
