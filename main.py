@@ -35,6 +35,8 @@ geocodeMap = pd.read_excel('resources/2015-allgeocodes.xlsx', sheetname='Sheet1'
 geocodeMapState = makeGeocodeDF(geocodeMap,40,'State Code (FIPS)','State')
 # Create DataFrame of County Names/County FIPS/State FIPS/
 geocodeMapCounty = makeGeocodeDF(geocodeMap,50,'County Code (FIPS)','County','State Code (FIPS)')
+# Create DataFrame of States and Abbreviations
+abbrMap = pd.read_excel('resources/stateAbbreviation.xlsx')
 
 # Create merged DataFrame with County and State FIPS and Names
 geocodeMap = pd.merge(geocodeMapState,geocodeMapCounty, how='outer', on='State Code (FIPS)')
@@ -219,10 +221,12 @@ def mergeOnGeocode(df1,df2):
 # Map census DFs to FIPS
 incomeDFmapped = mergeOnGeocode(incomeDF,geocodeMap)
 eduDFmapped = mergeOnGeocode(eduDF,geocodeMap)
+
 popDFmapped = mergeOnGeocode(populationDF,geocodeMap)
+popDFmapped = pd.merge(popDFmapped,abbrMap, how='inner',on=['State'])
 
 #/ Variables/DFs to use:
-    #/ To normalize data, use this DF: popDFmapped (FIPS mapped to names) or populationDF (FIPS only)
+    #/ To normalize data, use this DF: popDFmapped (FIPS mapped to names)
     #/ Income data DF to use: incomeDFmapped (FIPS mapped to names) or incomeDF (FIPS only)
     #/ Education data DF to use: eduDFmapped (FIPS mapped to names) or eduDF (FIPS only)
 
@@ -277,10 +281,6 @@ def breakdownByState(dfIn):
 
 # Function to set state as index
 def setStateAsIndex(df):
-
-    # Creates State only geocode map
-    geocodeMapState = geocodeMap[['State Code (FIPS)', 'State']]
-    geocodeMapState = geocodeMapState.drop_duplicates(subset=['State Code (FIPS)', 'State'], keep='first')
 
     # Merge on state only
     df = mergeOnGeocode(df,geocodeMapState)
@@ -499,9 +499,6 @@ plt.show()
 death_gb_cause_data = death_data_NAC_noUS.groupby(by=['Year', '113 Cause Name']).sum().reset_index()
 
 
-# In[42]:
-
-
 death_gb_cause_data.plot(kind='bar', x='113 Cause Name', y='Deaths', color='gray')
 plt.ylabel("Number of Deaths", size=10)
 plt.xlabel("Death Types", size=10)
@@ -523,10 +520,5 @@ death_heart_data.sort_values('Deaths', ascending=False).tail(10)
 # plt.show()
 
 
-# In[50]:
-
-
 # death_heart_data.plot(kind='bar', x='State', y='Deaths')
 # plt.show()
-
-
