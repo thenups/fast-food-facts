@@ -225,3 +225,133 @@ popDFmapped = mergeOnGeocode(populationDF,geocodeMap)
     #/ To normalize data, use this DF: popDFmapped (FIPS mapped to names) or populationDF (FIPS only)
     #/ Income data DF to use: incomeDFmapped (FIPS mapped to names) or incomeDF (FIPS only)
     #/ Education data DF to use: eduDFmapped (FIPS mapped to names) or eduDF (FIPS only)
+
+#/// Create Normalized DFs \\\*
+
+# Create function to normalize data
+def normalizeData(df1,df2,buckets):
+
+    # Merge dicts on geocode
+    df = mergeOnGeocode(df1,df2)
+
+    # For each column, divide by the total population column
+    for bucket in buckets:
+        df[bucket] = df[bucket]/df['Population']
+
+    # Drop population column
+    df.drop(['Population'], axis=1, inplace=True)
+
+    # Return df
+    return df
+
+# HOUSEHOLDS TOTAL: Create DF
+var = 'B19001_001E'
+householdDict = createIdDict([var],['Population']) #create dict
+
+URLArgs = '?get={}&for={}&key={}'.format(var,forArgs,apiKey)
+queryURL = baseURL + URLArgs #put together query URL
+
+householdDF = makeDataFrame(queryURL,householdDict) #create DF
+
+# +18 POPULATION TOTAL: Create DF
+var = 'B15001_001E'
+over18Dict = createIdDict([var],['Population']) #create dict
+
+URLArgs = '?get={}&for={}&key={}'.format(var,forArgs,apiKey)
+queryURL = baseURL + URLArgs #put together query URL
+
+over18DF = makeDataFrame(queryURL,over18Dict) #create DF
+
+# Normalize Income and Education DFs
+normIncome = normalizeData(incomeDF,householdDF,householdIncomeBuckets) #normalizedIncome
+normEdu = normalizeData(eduDF,over18DF,educationAttainmentBuckets) #normalizedEdu
+
+#/// Create Normalized DFs for States \\\*
+
+# Function to breakdown DFs by state FIPS
+def breakdownByState(dfIn):
+    df = dfIn.groupby(['State Code (FIPS)']).sum()
+    df.drop(['County Code (FIPS)'], axis=1, inplace=True)
+    df = df.reset_index()
+    return df
+
+# Function to set state as index
+def setStateAsIndex(df):
+
+    # Creates State only geocode map
+    geocodeMapState = geocodeMap[['State Code (FIPS)', 'State']]
+    geocodeMapState = geocodeMapState.drop_duplicates(subset=['State Code (FIPS)', 'State'], keep='first')
+
+    # Merge on state only
+    df = mergeOnGeocode(df,geocodeMapState)
+    df.drop('State Code (FIPS)', axis=1, inplace=True)
+    df = df.set_index('State')
+    return df
+
+# Function to Normalize state DFs
+def createStateNormDF (df1,df2,buckets):
+
+    # Breakdown DFs by STate and Normalize
+    df1n = breakdownByState(df1)
+    df2n = breakdownByState(df2)
+    df = normalizeData(df1n,df2n,buckets)
+
+    # Set state as the index
+    df = setStateAsIndex(df)
+
+    return df
+
+# Create State DF's
+# Income
+incomeByState = setStateAsIndex(breakdownByState(incomeDF))
+incomeByState = incomeByState[householdIncomeBuckets] #reorder columns
+# Education
+eduByState = setStateAsIndex(breakdownByState(eduDF))
+eduByState = eduByState[educationAttainmentBuckets] #reorder columns
+
+# Create State Normalized DF's
+# Income
+incomeByStateNorm = createStateNormDF(incomeDF,householdDF,householdIncomeBuckets)
+incomeByStateNorm = incomeByStateNorm[householdIncomeBuckets] #reorder columns
+# Education
+eduByStateNorm = createStateNormDF(eduDF,over18DF,educationAttainmentBuckets)
+eduByStateNorm = eduByStateNorm[educationAttainmentBuckets] #reorder columns
+
+#/// Create Bar Charts \\\*
+sns.palplot(sns.hls_palette(16, l=.3, s=.8))
+
+# Function to create bar charts
+def createBarChart(df,title,x,y,lt,l,c):
+
+    # Plot DF as bar graph
+    df.plot(kind='bar',
+            stacked=True,
+            title=title,
+            figsize=(20,10),
+            fontsize=14
+           )
+
+    # Add title/labels
+    plt.title(title,fontsize=18) #Create graph title
+    plt.xlabel(x, fontsize=14) #Create x-axis label
+    plt.ylabel(y,fontsize=14) #Create y-axis label
+    plt.tick_params(axis='both', labelsize=12) #Format Axis
+
+    # Add legend
+    legend = plt.legend(loc='lower center',bbox_to_anchor=(.5, l), ncol=c, borderaxespad=0., title=lt, fontsize=12)
+    legend.get_title().set_fontsize('14') #Set legend title font size
+
+    # Show plot
+    plt.show()
+
+# Bar Chart: Household Income for All States
+createBarChart(incomeByState,'Household Income by Volume for All States','State','Households','Household Income Buckets',-.45,6)
+
+# Normalized Household Income for All States
+createBarChart(incomeByStateNorm,'Normalized Household Income for All States','State','Normalized % Population','Household Income Buckets',-.45,6)
+
+# Educational Attainment (18+) for All States
+createBarChart(eduByState,'Educational Attainment (18+) by Volume for All States','State','Population','Educational Attainment Buckets',-.4,5)
+
+# Normalized Education (18+) for All States
+createBarChart(eduByStateNorm,'Normalized Education (18+) for All States','State','Normalized % Population','Educational Attainment Buckets',-.4,5)
