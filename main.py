@@ -278,10 +278,6 @@ def breakdownByState(dfIn):
 # Function to set state as index
 def setStateAsIndex(df):
 
-    # Creates State only geocode map
-    geocodeMapState = geocodeMap[['State Code (FIPS)', 'State']]
-    geocodeMapState = geocodeMapState.drop_duplicates(subset=['State Code (FIPS)', 'State'], keep='first')
-
     # Merge on state only
     df = mergeOnGeocode(df,geocodeMapState)
     df.drop('State Code (FIPS)', axis=1, inplace=True)
