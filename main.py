@@ -351,3 +351,178 @@ createBarChart(eduByState,'Educational Attainment (18+) by Volume for All States
 
 # Normalized Education (18+) for All States
 createBarChart(eduByStateNorm,'Normalized Education (18+) for All States','State','Normalized % Population','Educational Attainment Buckets',-.4,5)
+
+
+# Reading files
+death_data = 'resources/NCHS_LeadingCauses.csv'
+chronic_ind_data = 'resources/U.S._Chronic_Disease_Indicators.csv'
+death_data_df = pd.read_csv(death_data, encoding = 'ISO-8859-1')
+chronic_ind_data_df = pd.read_csv(chronic_ind_data, encoding = 'ISO-8859-1')
+
+# Starting analysis on the chronic indicators file
+# Note the number of records
+chronic_ind_data_df.info()
+
+# Notice the drop in the number of records
+chronic_ind_data_df[chronic_ind_data_df['YearEnd'] == 2015].info()
+
+# Need the 2015 only data
+chronic_ind_data_df = chronic_ind_data_df[chronic_ind_data_df['YearEnd'] == 2015]
+# chronic_ind_data_df['Topic'].value_counts()
+counts_ind = chronic_ind_data_df['Topic'].value_counts()
+
+# Plotting chronic indicators for 2015
+counts_ind.plot(kind='bar', color=['gray'])
+plt.ylabel("Quantity Reported", size=10)
+plt.grid(True, color='gray', linestyle='-', linewidth=.5)
+plt.xlabel("Chronic Indicators", size=10)
+plt.title('Listing of Top Chronic Indicators for 2015', size=17)
+plt.show()
+
+# Analysis on Three Indicators (Diabeties, Heart, Nutrition)
+# Chronic data based on Diabeties
+chronic_dia_ind_df = chronic_ind_data_df[chronic_ind_data_df['Topic'].str.contains('Dia')]
+chronic_dia_ind_df['Question'].value_counts()
+
+chronic_gb_dia_ind_df = chronic_dia_ind_df.groupby(by=['YearEnd', 'LocationDesc', 'Question']).sum()
+# chronic_gb_dia_ind_df
+
+# Chronic data for the Cardio disease type
+chronic_heart_ind_df = chronic_ind_data_df[chronic_ind_data_df['Topic'].str.contains('Cardio')]
+chronic_heart_ind_df['Question'].value_counts()
+
+# Analyzing nutrition data
+chronic_nutri_ind_df = chronic_ind_data_df[chronic_ind_data_df['Topic'].str.contains('Nutr')]
+chronic_nutri_ind_df['Question'].value_counts()
+
+# Looked at pulmonary data and it doesn't seem to fit the fast food deal
+# Recommendation will be to focus on diabeties, heart, nutrition
+chronic_pulm_ind_df = chronic_ind_data_df[chronic_ind_data_df['Topic'].str.contains('Pulmonar')]
+chronic_pulm_ind_df['Question'].value_counts()
+
+# Death data by state
+death_data_year = death_data_df[death_data_df['Year'] == 2015]
+# death_data_year.head()
+
+# Analyzing the deaths by type and state
+death_data_year['113 Cause Name'].value_counts()
+death_data_year['113 Cause Name'].unique()
+
+# Getting the min death type and state
+death_data_year.min()
+
+# Getting the max death type and state
+death_data_year.max()
+
+# Looking at the number of deaths and seeing which state has the most and what type
+death_data_year.sort_values(by='Deaths', ascending=False).head()
+
+# Since 'all causes' acts as a summary I want to strip that out of the figures
+death_data_not_all_causes = death_data_year[death_data_year['113 Cause Name'] != 'All Causes']
+
+# death_data_not_all_causes.head()
+
+# In this dataset notice that the United States shows up as a state so let's strip that out as well
+death_data_not_all_causes.sort_values(by='Deaths', ascending=False).head(10)
+
+# This dataset is all death types and all states only
+# This dataset is all death types and all states only
+death_data_NAC_noUS = death_data_not_all_causes[death_data_not_all_causes['State'] != 'United States']
+# death_data_NAC_noUS.head()
+
+# Creating a groupby by year and state
+death_gb_state_data = death_data_NAC_noUS.groupby(by=['Year', 'State']).sum().reset_index()
+
+# Plotting deaths by state
+death_gb_state_data.plot(kind='bar', x='State', y='Deaths', subplots=False)
+plt.ylabel("Number of Deaths", size=10)
+plt.xlabel("States", size=10)
+plt.title('Total Death Volume by State', size=17)
+plt.show()
+
+# Preparing data to plot
+death_gb_state_data = death_data_NAC_noUS.groupby(by=['Year', 'State']).sum().reset_index()
+death_gb_state_data.sort_values('Deaths', ascending=False).head(20)
+death_top20_states = death_gb_state_data.sort_values('Deaths', ascending=False).head(20)
+
+# Plotting top 20 states
+death_top20_states.plot.bar('State', 'Deaths', color='gray')
+plt.ylabel("Number of Deaths", size=10)
+plt.xlabel("States", size=10)
+plt.title('Top 10 States by Volume', size=17)
+plt.show()
+
+# Lets study  3 southern states - Alabama, Tennessee, Georgia
+death_data_NAC_noUS[death_data_NAC_noUS['State'] == 'Georgia'].plot.bar('Cause Name', 'Deaths', color='gray')
+plt.ylabel("Number of Deaths", size=10)
+plt.xlabel("Death Types", size=10)
+plt.title('2015 Deaths - Georgia', size=17)
+plt.show()
+
+death_data_NAC_noUS[death_data_NAC_noUS['State'] == 'Tennessee'].plot.bar('Cause Name', 'Deaths', color='gray')
+plt.ylabel("Number of Deaths", size=10)
+plt.xlabel("Death Types", size=10)
+plt.title('2015 Deaths - Tennessee', size=17)
+plt.show()
+
+death_data_NAC_noUS[death_data_NAC_noUS['State'] == 'Alabama'].plot.bar('Cause Name', 'Deaths', color='gray')
+plt.ylabel("Number of Deaths", size=10)
+plt.xlabel("Death Types", size=10)
+plt.title('2015 Deaths - Alabama', size=17)
+plt.show()
+
+
+# Analysis suggest that some states don't have the same level of death cardio or cancer death rates
+# Notice that Virginia has less heart disease than the southern states
+death_data_NAC_noUS[death_data_NAC_noUS['State'] == 'Virginia'].plot.bar('Cause Name', 'Deaths', color='gray')
+plt.ylabel("Number of Deaths", size=10)
+plt.xlabel("Death Types", size=10)
+plt.title('2015 Deaths - Virginia', size=17)
+plt.show()
+
+# Notice that Arizona has less heart disease than the southern states
+death_data_NAC_noUS[death_data_NAC_noUS['State'] == 'Arizona'].plot.bar('Cause Name', 'Deaths', color='gray')
+plt.ylabel("Number of Deaths", size=10)
+plt.xlabel("Death Types", size=10)
+plt.title('2015 Deaths - Arizona', size=17)
+plt.show()
+
+
+
+# I want to compare size of population to number of deaths/death types
+# This is where I will insert that code
+
+death_gb_cause_data = death_data_NAC_noUS.groupby(by=['Year', '113 Cause Name']).sum().reset_index()
+
+
+# In[42]:
+
+
+death_gb_cause_data.plot(kind='bar', x='113 Cause Name', y='Deaths', color='gray')
+plt.ylabel("Number of Deaths", size=10)
+plt.xlabel("Death Types", size=10)
+plt.title('Top Death Types by Volume', size=17)
+plt.show()
+
+
+# Plotting diabeties data
+death_dia_data = death_data_NAC_noUS[death_data_NAC_noUS['Cause Name'].str.contains('Dia')]
+death_dia_data.sort_values('Deaths', ascending=False)
+death_dia_data.sort_values('Deaths', ascending=False).tail(10)
+
+# Plotting cardio data
+death_heart_data = death_data_NAC_noUS[death_data_NAC_noUS['Cause Name'].str.contains('Heart')]
+death_heart_data.sort_values('Deaths', ascending=False)
+death_heart_data.sort_values('Deaths', ascending=False).tail(10)
+
+# death_dia_data.plot(kind='bar', x='State', y='Deaths')
+# plt.show()
+
+
+# In[50]:
+
+
+# death_heart_data.plot(kind='bar', x='State', y='Deaths')
+# plt.show()
+
+
