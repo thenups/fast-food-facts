@@ -8,6 +8,24 @@ from pandas import ExcelFile
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+###############################################################################
+# Income and Education DataFrames to use:
+    # By County:
+        # By Value:
+            # incomeDFmapped - INCOME
+            # eduDFmapped - EDUCATION
+        # Normalized
+            # normIncome - INCOME
+            # normEdu - EDUCATION
+    # By State:
+        # By Value:
+            # incomeByState - INCOME
+            # eduByState - EDUCATION
+        # Normalized
+            # incomeByStateNorm - INCOME
+            # eduByStateNorm - EDUCATION
+###############################################################################
+
 ##### MAP GEOCODES (FIPS) TO STATES/COUNTIES #####
 # Create function to make Geocode Data into DataFrame
 def makeGeocodeDF(pdExel,sumLevel,fipsCol1,colName,fipsCol2=0):
