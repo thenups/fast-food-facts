@@ -335,6 +335,28 @@ incomeByStateNorm = incomeByStateNorm[householdIncomeBuckets] #reorder columns
 eduByStateNorm = createStateNormDF(eduDF,over18DF,educationAttainmentBuckets)
 eduByStateNorm = eduByStateNorm[educationAttainmentBuckets] #reorder columns
 
+# Reduce income buckets
+def reduceBuckets(df):
+    df['< $25K'] = df[householdIncomeBuckets[0]] + df[householdIncomeBuckets[1]] + df[householdIncomeBuckets[2]] + df[householdIncomeBuckets[3]]
+    df['\$25K - $49,999'] = df[householdIncomeBuckets[4]] + df[householdIncomeBuckets[5]] + df[householdIncomeBuckets[6]] + df[householdIncomeBuckets[7]] + df[householdIncomeBuckets[8]]
+    df['\$50K - $99,999'] = df[householdIncomeBuckets[9]] + df[householdIncomeBuckets[10]] + df[householdIncomeBuckets[11]]
+    df['\$100K - $149,999'] = df[householdIncomeBuckets[12]] + df[householdIncomeBuckets[13]]
+
+    df = df[['< $25K',
+             '\$25K - $49,999',
+             '\$50K - $99,999',
+             '\$100K - $149,999',
+             '$150K - $199,999',
+             '$200K +'
+            ]]
+
+    df = df.rename({'$150K - $199,999' : '\$150K - $199,999'})
+
+    return df
+
+incomeByStateBuckets = reduceBuckets(incomeByState)
+incomeByStateNormBuckets = reduceBuckets(incomeByStateNorm)
+
 #/// Create Bar Charts \\\*
 sns.palplot(sns.hls_palette(16, l=.3, s=.8))
 
