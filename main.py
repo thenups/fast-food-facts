@@ -398,8 +398,9 @@ createBarChart(eduByStateNorm,'Normalized Education (18+) for All States','State
 
 
 # Reading files
-death_data = 'resources/NCHS_LeadingCauses.csv'
-chronic_ind_data = 'resources/U.S._Chronic_Disease_Indicators.csv'
+# Reading files
+death_data = '../fastfoodfacts/resources/NCHS_LeadingCauses.csv'
+chronic_ind_data = '../fastfoodfacts/resources/U.S._Chronic_Disease_Indicators_N.csv'
 death_data_df = pd.read_csv(death_data, encoding = 'ISO-8859-1')
 chronic_ind_data_df = pd.read_csv(chronic_ind_data, encoding = 'ISO-8859-1')
 
@@ -421,6 +422,7 @@ plt.ylabel("Quantity Reported", size=10)
 plt.grid(True, color='gray', linestyle='-', linewidth=.5)
 plt.xlabel("Chronic Indicators", size=10)
 plt.title('Listing of Top Chronic Indicators for 2015', size=17)
+plt.savefig('../fastfoodfacts/resources/TopdiseaseInd.png', bbox_inches='tight', pad_inches=2)
 plt.show()
 
 # Analysis on Three Indicators (Diabeties, Heart, Nutrition)
@@ -482,6 +484,7 @@ death_gb_state_data.plot(kind='bar', x='State', y='Deaths', subplots=False)
 plt.ylabel("Number of Deaths", size=10)
 plt.xlabel("States", size=10)
 plt.title('Total Death Volume by State', size=17)
+plt.savefig('../fastfoodfacts/resources/StatesDeath.png', bbox_inches='tight', pad_inches=2)
 plt.show()
 
 # Preparing data to plot
@@ -493,7 +496,8 @@ death_top20_states = death_gb_state_data.sort_values('Deaths', ascending=False).
 death_top20_states.plot.bar('State', 'Deaths', color='gray')
 plt.ylabel("Number of Deaths", size=10)
 plt.xlabel("States", size=10)
-plt.title('Top 10 States by Volume', size=17)
+plt.title('Top 20 States by Volume', size=17)
+plt.savefig('../fastfoodfacts/resources/Top20StatesDeath.png', bbox_inches='tight', pad_inches=2)
 plt.show()
 
 # Lets study  3 southern states - Alabama, Tennessee, Georgia
@@ -501,17 +505,20 @@ death_data_NAC_noUS[death_data_NAC_noUS['State'] == 'Georgia'].plot.bar('Cause N
 plt.ylabel("Number of Deaths", size=10)
 plt.xlabel("Death Types", size=10)
 plt.title('2015 Deaths - Georgia', size=17)
+plt.savefig('../fastfoodfacts/resources/GADeath.png', bbox_inches='tight', pad_inches=2)
 plt.show()
 
 death_data_NAC_noUS[death_data_NAC_noUS['State'] == 'Tennessee'].plot.bar('Cause Name', 'Deaths', color='gray')
 plt.ylabel("Number of Deaths", size=10)
 plt.xlabel("Death Types", size=10)
 plt.title('2015 Deaths - Tennessee', size=17)
+plt.savefig('../fastfoodfacts/resources/TNDeath.png', bbox_inches='tight', pad_inches=2)
 plt.show()
 
 death_data_NAC_noUS[death_data_NAC_noUS['State'] == 'Alabama'].plot.bar('Cause Name', 'Deaths', color='gray')
 plt.ylabel("Number of Deaths", size=10)
 plt.xlabel("Death Types", size=10)
+plt.savefig('../fastfoodfacts/resources/ALDeath.png', bbox_inches='tight', pad_inches=2)
 plt.title('2015 Deaths - Alabama', size=17)
 plt.show()
 
@@ -522,6 +529,7 @@ death_data_NAC_noUS[death_data_NAC_noUS['State'] == 'Virginia'].plot.bar('Cause 
 plt.ylabel("Number of Deaths", size=10)
 plt.xlabel("Death Types", size=10)
 plt.title('2015 Deaths - Virginia', size=17)
+plt.savefig('../fastfoodfacts/resources/VADeath.png')
 plt.show()
 
 # Notice that Arizona has less heart disease than the southern states
@@ -543,6 +551,7 @@ death_gb_cause_data.plot(kind='bar', x='113 Cause Name', y='Deaths', color='gray
 plt.ylabel("Number of Deaths", size=10)
 plt.xlabel("Death Types", size=10)
 plt.title('Top Death Types by Volume', size=17)
+plt.savefig('../fastfoodfacts/resources/topDeathtypes.png', bbox_inches='tight', pad_inches=2)
 plt.show()
 
 
@@ -556,9 +565,153 @@ death_heart_data = death_data_NAC_noUS[death_data_NAC_noUS['Cause Name'].str.con
 death_heart_data.sort_values('Deaths', ascending=False)
 death_heart_data.sort_values('Deaths', ascending=False).tail(10)
 
-# death_dia_data.plot(kind='bar', x='State', y='Deaths')
-# plt.show()
+count_edu_AL = eduByState.loc['Alabama', :].describe()
+count_edu_TN = eduByState.loc['Tennessee', :].describe()
+count_edu_GA = eduByState.loc['Georgia', :].describe()
+count_edu_VA = eduByState.loc['Virginia', :].describe()
 
+fig, ax = plt.subplots()
+count_edu_AL[3:8].plot(ax=ax, color='blue', linestyle='--', label='Alabama', marker='>')
+count_edu_TN[3:8].plot(ax=ax, color='gray', linestyle='--', label='Tennessee', marker='o')
+count_edu_GA[3:8].plot(ax=ax, color='black', linestyle='--', label='Georgia', marker='^')
+count_edu_VA[3:8].plot(ax=ax, color='red', linestyle='--', label='Virginia', marker='<')
+plt.grid(True, color='gray', linestyle='-', linewidth=.5)
+plt.ylabel("# of People - Educated", size=10)
+plt.xlabel("Quartiles", size=10)
+plt.legend(loc='best')
+plt.title('# of People per Quartile', size=20)
+plt.show()
 
-# death_heart_data.plot(kind='bar', x='State', y='Deaths')
-# plt.show()
+ttest_GA = eduByState.loc['Georgia', :]
+ttest_VA = eduByState.loc['Virginia', :]
+stats.ttest_ind(ttest_GA,ttest_VA)
+ttest_AL = eduByState.loc['Alabama', :]
+ttest_VA = eduByState.loc['Virginia', :]
+stats.ttest_ind(ttest_GA,ttest_VA)
+
+popDFstate = popDFmapped.groupby(by='State').sum().sort_values(by='Population', ascending=False)
+popDFstate_only = popDFstate['Population']
+popDFstate_only = pd.DataFrame(popDFstate_only, columns=['Population'])
+popDFstate_only = popDFstate_only.reset_index()
+popDeathstateDataDF = pd.merge(popDFstate_only, death_gb_state_data, on='State', how='outer')
+popDeathstateDataDF = popDeathstateDataDF[['Year', 'State', 'Population', 'Deaths']]
+
+for x in popDeathstateDataDF.iterrows():
+    ratio = (x[1]['Deaths'] / x[1]['Population']) * 100
+    popDeathstateDataDF.set_value(value=ratio, col='ratio', index=x[0])
+
+avgpopDeathstateDF = popDeathstateDataDF['ratio'].describe()
+above_avg_death_rate = popDeathstateDataDF[popDeathstateDataDF['ratio'] >= avgpopDeathstateDF['mean']]
+
+fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex='all', figsize=(18,5))
+plt.suptitle('States with Death Rates Above the Mean', x=0.5, y=1.05, fontsize=22)
+above_avg_death_rate.plot.bar(x='State', y='Population', ax=ax1, color='pink', label='Population')
+above_avg_death_rate.plot.bar(x='State', y='Deaths', ax=ax2, color='red', label='Deaths')
+above_avg_death_rate.plot.bar(x='State', y='ratio', ax=ax3, color='gray', label='Rate')
+plt.legend(loc='best')
+plt.tight_layout()
+plt.savefig('../fastfoodfacts/resources/statesabovemean.png', bbox_inches='tight', pad_inches=2)
+plt.xticks(np.arange(18), above_avg_death_rate.loc[:, 'State'], rotation=90 )
+plt.show()
+
+ff_df_gb_state = ff_df.groupby(by='State').sum()
+ff_df_gb_state = ff_df_gb_state.reset_index()
+ff_df_gb_state = pd.merge(ff_df_gb_state, abbrMap, left_on='State', right_on='Abbreviation', how='outer')
+ff_df_gb_state = ff_df_gb_state[['State_y', 'Fast Food Restaurants 2015 (PROJECTED)']]
+incomeByState = incomeByState.reset_index()
+incomeByState_ff_df = pd.merge(incomeByState, ff_df_gb_state, left_on='State', right_on='State_y', how='outer')
+for index,row in incomeByState_ff_df.iterrows():
+    incBelow40 = row[1:8].sum()
+    incAbove40 = row[8:17].sum()
+    incomeByState_ff_df.set_value(value=incBelow40, col='IncBelow40', index=index)
+    incomeByState_ff_df.set_value(value=incAbove40, col='IncAbove40', index=index)
+
+incomeByState_ff_df = incomeByState_ff_df[['State', 'Fast Food Restaurants 2015 (PROJECTED)','IncBelow40', 'IncAbove40']]
+
+x1 = incomeByState_ff_df['Fast Food Restaurants 2015 (PROJECTED)']
+y1 = incomeByState_ff_df['IncBelow40']
+x1 = x1.fillna(0)
+y1 = y1.fillna(0)
+slope, intercept, r_value, p_value, std_err = stats.linregress(x1, y1)
+plt.plot(x1, y1, 'o', label='original data')
+plt.plot(x1, intercept + slope*x1, 'r', label='fitted line')
+plt.legend()
+plt.show()
+
+x1 = incomeByState_ff_df['Fast Food Restaurants 2015 (PROJECTED)']
+y1 = incomeByState_ff_df['IncBelow40']
+x1 = x1.fillna(0)
+y1 = y1.fillna(0)
+slope, intercept, r_value, p_value, std_err = stats.linregress(x1, y1)
+x2 = incomeByState_ff_df['Fast Food Restaurants 2015 (PROJECTED)']
+y2 = incomeByState_ff_df['IncAbove40']
+x2 = x2.fillna(0)
+y2 = y2.fillna(0)
+slope, intercept, r_value, p_value, std_err = stats.linregress(x2, y2)
+fig, ax = plt.subplots(figsize=(10,5), sharey='all')
+plt.suptitle('Volume of FF Restaurants to Salary', x=0.5, y=1, fontsize=22)
+incomeByState_ff_df.plot.scatter(x='Fast Food Restaurants 2015 (PROJECTED)', ax=ax, y='IncBelow40', color='red', marker='o')
+incomeByState_ff_df.plot.scatter(x='Fast Food Restaurants 2015 (PROJECTED)', ax=ax, y='IncAbove40', color='black', marker='o')
+plt.plot(x1, intercept + slope*x1, 'r', label='<40k fitted line')
+plt.plot(x2, intercept + slope*x2, 'black', label='>40k fitted line')
+plt.legend(loc='best')
+plt.savefig('../fastfoodfacts/resources/ffincrelation.png', bbox_inches='tight', pad_inches=2)
+plt.show()
+
+# rg=sns.regplot
+x1 = incomeByState_ff_df['Fast Food Restaurants 2015 (PROJECTED)']
+y1 = incomeByState_ff_df['IncBelow40']
+x1 = x1.fillna(0)
+y1 = y1.fillna(0)
+slope, intercept, r_value, p_value, std_err = stats.linregress(x1, y1)
+y = y1
+x = x1
+d = incomeByState_ff_df
+# Show the results of a linear regression within each dataset
+ax = sns.regplot(x=x, y=y, data=d, color='gray')
+plt.title('FF Restaurant Volume for <40k Salary')
+plt.show()
+
+# rg=sns.regplot
+x2 = incomeByState_ff_df['Fast Food Restaurants 2015 (PROJECTED)']
+y2 = incomeByState_ff_df['IncAbove40']
+x2 = x2.fillna(0)
+y2 = y2.fillna(0)
+slope, intercept, r_value, p_value, std_err = stats.linregress(x2, y2)
+y = y2
+x = x2
+d = incomeByState_ff_df
+# Show the results of a linear regression within each dataset
+ax = sns.regplot(x=x, y=y, data=d, color='blue')
+plt.title('FF Restaurant Volume for <40k Salary')
+plt.show()
+
+# rg=sns.regplot
+x2 = incomeByState_ff_df['Fast Food Restaurants 2015 (PROJECTED)']
+y2 = incomeByState_ff_df['IncAbove40']
+x2 = x2.fillna(0)
+y2 = y2.fillna(0)
+slope, intercept, r_value, p_value, std_err = stats.linregress(x2, y2)
+y = y2
+x = x2
+d = incomeByState_ff_df
+r2 = r_value*r_value
+print('x1 slope=', slope, 'x1 r^2=', r2)
+# Show the results of a linear regression within each dataset
+ax = sns.regplot(x=x, y=y, data=d, color='blue', label='<40k Salary')
+x1 = incomeByState_ff_df['Fast Food Restaurants 2015 (PROJECTED)']
+y1 = incomeByState_ff_df['IncBelow40']
+x1 = x1.fillna(0)
+y1 = y1.fillna(0)
+slope, intercept, r_value, p_value, std_err = stats.linregress(x1, y1)
+y = y1
+x = x1
+d = incomeByState_ff_df
+r3 = r_value*r_value
+print('x2 slope=', slope, 'x2 r^2=', r3)
+# Show the results of a linear regression within each dataset
+ax = sns.regplot(x=x, y=y, data=d, color='gray', label='>40k Salary')
+plt.suptitle('FF Restaurant Volume for Salary - Above and Below 40k', x=0.5, y=1, fontsize=12)
+plt.legend(loc='best')
+plt.savefig('../fastfoodfacts/resources/ffsalaryincrelation.png', bbox_inches='tight', pad_inches=2)
+plt.show()
